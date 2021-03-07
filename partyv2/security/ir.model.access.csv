@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_partyv2_films,partyv2.films,model_partyv2_films,base.group_user,1,1,1,1
+access_partyv2_directors,partyv2.directors,model_partyv2_directors,base.group_user,1,1,1,1
+access_partyv2_scriptwriters,partyv2.scriptwriters,model_partyv2_scriptwriters,base.group_user,1,1,1,1
+access_partyv2_producers,partyv2.producers,model_partyv2_producers,base.group_user,1,1,1,1
+access_partyv2_musical_themes,partyv2.musical_themes,model_partyv2_musical_themes,base.group_user,1,1,1,1
+access_partyv2_albums,partyv2.albums,model_partyv2_albums,base.group_user,1,1,1,1
+access_partyv2_discographys,partyv2.discographys,model_partyv2_discographys,base.group_user,1,1,1,1
+access_partyv2_authors,partyv2.authors,model_partyv2_authors,base.group_user,1,1,1,1
+access_partyv2_bands,partyv2.bands,model_partyv2_bands,base.group_user,1,1,1,1
+access_partyv2_party,partyv2.party,model_partyv2_party,base.group_user,1,1,1,1
+access_partyv2_goers,partyv2.goers,model_partyv2_goers,base.group_user,1,1,1,1
+access_partyv2_genres,partyv2.genres,model_partyv2_genres,base.group_user,1,1,1,1
+access_partyv2_languages,party.v2languages,model_partyv2_languages,base.group_user,1,1,1,1

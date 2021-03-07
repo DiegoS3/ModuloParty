@@ -1,0 +1,1118 @@
+<odoo>
+    <data>
+
+        <!-- LOAD CSS STYLES -->
+        <template id="my_custom_css_asset" name="my_custom_css assets" inherit_id="web.assets_backend">
+            <xpath expr="." position="inside">
+                <link rel="stylesheet" href="/partyv2/static/src/css/styles.css"/>
+            </xpath>
+        </template>
+
+        <!-- explicit list view definition -->
+
+        <!-- FILMS -->
+        <!-- Vista Tree -->
+        <record model="ir.ui.view" id="partyv2.films_list">
+            <field name="name">partyv2.films list</field>
+            <field name="model">partyv2.films</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="genre"
+                           widget="many2many_tags"/> <!--  options="{'color_field': 'color'}"  Para modificar el color-->
+                    <field name="premiere_date" string="Release Date"/>
+                    <field name="language" widget="many2many_tags"/>
+                    <field name="duration"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista SEARCH -->
+        <record model="ir.ui.view" id="partyv2.films_search">
+            <field name="name">partyv2.films search</field>
+            <field name="model">partyv2.films</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Title"/>
+                    <field name="genre" string="Genre"/>
+                    <field name="language" string="Language"/>
+                    <field name="directors" string="Director"/>
+                    <field name="country" string="Country"/>
+                    <field name="duration" string="Min Duration" filter_domain="[('duration', '>=', self)]"/>
+                    <filter name="this_year_release" string="Release This Year" domain="[('premiere_date', '=' , (time.strftime('%Y-%m-%d')))]"/>
+                    <filter name="filter_release_date" string="Release Date" date="premiere_date"/>
+                    <group expand="1" string="Group By">
+                        <filter string=" Group by Relase Date" name="premiere_date" context="{'group_by':'premiere_date'}"/>
+                        <filter string=" Group by Country" name="country" context="{'group_by':'country'}"/>
+                        <filter string=" Group by Yeads Old" name="years_old" context="{'group_by':'years_old'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista Form -->
+        <record model="ir.ui.view" id="partyv2.films_form">
+            <field name="name">partyv2.films form</field>
+            <field name="model">partyv2.films</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <field name="photo" widget="image"/>
+                        <h2><field name="name" placeholder="Film Title" required="1"/></h2>
+                        <group>
+                            <group>
+                                <separator string="Synopsis"></separator>
+                                <field name="description" required="1"/>
+                            </group>
+                            <group>
+                                <separator string="Film Data"></separator>
+                                <field name="country" required="1"/>
+                                <field name="premiere_date" required="1"/>
+                                <field name="years_old"/>
+                                <field name="duration" required="1"/>
+                            </group>
+                            <separator string="Genres"></separator>
+                            <field name="genre" widget="many2many_tags" required="1"/>
+                            <separator string="Languages" required="1"></separator>
+                            <field name="language" widget="many2many_tags"/>
+                        </group>
+                        <group>
+                            <notebook>
+                                <page string="Directors">
+                                    <field name="directors"/>
+                                </page>
+                                <page string="Scriptwriters">
+                                    <field name="scriptwriters"/>
+                                </page>
+                                <page string="Producers">
+                                    <field name="producers"/>
+                                </page>
+                                <page string="Parties">
+                                    <field name="all_parties"/>
+                                </page>
+                            </notebook>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Vista Kanban -->
+        <record model="ir.ui.view" id="partyv2.films_kanban">
+            <field name="name">partyv2.films kanban</field>
+            <field name="model">partyv2.films</field>
+            <field name="arch" type="xml">
+                <kanban default_group_by="country" on_create="quick_create"
+                        quick_create_view="partyv2.quick_create_film_form" records_draggable="false">
+                    <field name="id"/>
+                    <field name="description"/>
+                    <field name="genre"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div t-attf-class="oe_kanban_color_{{kanban_getcolor(record.genre.raw_value)}} oe_kanban_global_click o_kanban_record_has_image_fill">
+                                <a type="open">
+                                    <img width="100" style="padding:5px" class="oe_kanban_image"
+                                         t-att-src="kanban_image('partyv2.films', 'photo', record.id.raw_value)"
+                                         alt="films image"/>
+                                    <div t-attf-class="oe_kanban_content">
+                                        <h4>
+                                            <a type="edit">
+                                                <field name="name"></field>
+                                            </a>
+                                        </h4>
+                                        <ul>
+                                            <li><strong>Genre:</strong>
+                                                <field name="genre" widget="many2many_tags"></field>
+                                            </li>
+                                            <li><strong>Language:</strong>
+                                                <field name="language" widget="many2many_tags"></field>
+                                            </li>
+                                            <li>
+                                                <strong>Duration: </strong><field name="duration"/>
+                                            </li>
+                                            <li>
+                                                <strong>Years Old: </strong><field name="years_old"/>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </a>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+
+        <!-- FOrmulario para crear dede kanban una pelicula -->
+        <record model="ir.ui.view" id="partyv2.quick_create_film_form">
+            <field name="name">partyv2.films form quickcreate</field>
+            <field name="model">partyv2.films</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group>
+                        <field name="name" required="1"/>
+                        <field name="description" required="1"/>
+                        <field name="country" required="1"/>
+                        <field name="premiere_date" required="1"/>
+                        <field name="duration" required="1"/>
+                        <field name="genre" widget="many2many_tags" required="1"/>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+        <!-- GENRES -->
+        <!-- Vista Tree -->
+        <record model="ir.ui.view" id="partyv2.genres_list">
+            <field name="name">partyv2.genres list</field>
+            <field name="model">partyv2.genres</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name" required="1"/>
+                    <field name="films" sum="Films"/>
+                    <field name="musical_themes" sum="Musical Themes"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista SEARCH -->
+        <record model="ir.ui.view" id="partyv2.genres_search">
+            <field name="name">partyv2.genres search</field>
+            <field name="model">partyv2.genres</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Genre"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista FORM -->
+        <record model="ir.ui.view" id="partyv2.genres_form">
+            <field name="name">partyv2.genres form</field>
+            <field name="model">partyv2.genres</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <h2><field name="name" required="1"/></h2>
+                        </group>
+                        <separator string="Films"></separator>
+                        <field name="films" readonly="1">
+                            <tree>
+                                <field name="name"/>
+                                <field name="premiere_date" string="Release Date"/>
+                                <field name="duration"/>
+                            </tree>
+                        </field>
+                        <separator string="Musical Themes"></separator>
+                        <field name="musical_themes" readonly="1">
+                            <tree>
+                                <field name="name"/>
+                                <field name="album"/>
+                                <field name="duration" widget="float_time"/>
+                            </tree>
+                        </field>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- LANGUAGES -->
+        <!-- Vista Tree -->
+        <record model="ir.ui.view" id="partyv2.languages_list">
+            <field name="name">partyv2.languages list</field>
+            <field name="model">partyv2.languages</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name" string="Language"/>
+                    <field name="country"/>
+                    <field name="films" sum="Films"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista SEARCH -->
+        <record model="ir.ui.view" id="partyv2.languages_search">
+            <field name="name">partyv2.languages search</field>
+            <field name="model">partyv2.languages</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Language"/>
+                    <field name="country" string="Country"/>
+                    <group expand="1" string="Group By">
+                        <filter string=" Group by Country" name="country" context="{'group_by':'country'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista FORM -->
+        <record model="ir.ui.view" id="partyv2.languages_form">
+            <field name="name">partyv2.languages form</field>
+            <field name="model">partyv2.languages</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="name" required="1"/>
+                            <field name="country" required="1"/>
+                        </group>
+                        <separator string="Films"></separator>
+                        <field name="films" readonly="1">
+                            <tree>
+                                <field name="name"/>
+                                <field name="premiere_date" string="Release Date"/>
+                                <field name="duration"/>
+                            </tree>
+                        </field>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- DIRECTORS -->
+        <!-- Vista Tree -->
+        <record model="ir.ui.view" id="partyv2.directors_list">
+            <field name="name">partyv2.directors list</field>
+            <field name="model">partyv2.directors</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="photo" widget="image" class="imagetree" />
+                    <field name="name" string="Director"/>
+                    <field name="films" sum="Directed Films" string="Directed Films"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista SEARCH -->
+        <record model="ir.ui.view" id="partyv2.directors_search">
+            <field name="name">partyv2.directors search</field>
+            <field name="model">partyv2.directors</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Name"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista Form -->
+        <record model="ir.ui.view" id="partyv2.directors_form">
+            <field name="name">partyv2.directors form</field>
+            <field name="model">partyv2.directors</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <field name="photo" widget="image" class="oe_left oe_avatar"/>
+                        <group>
+                            <separator string="Director Data"></separator>
+                            <field name="name" string="Director"  required="1"/>
+                        </group>
+                        <separator string="Directed Films"></separator>
+                        <field name="films" readonly="1"/>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- PRODUCERS -->
+        <!-- Vista Tree -->
+        <record model="ir.ui.view" id="partyv2.producers_list">
+            <field name="name">partyv2.producers list</field>
+            <field name="model">partyv2.producers</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="photo" widget="image" class="imagetree"/>
+                    <field name="name" string="Producer"/>
+                    <field name="films" sum="Produced Films" string="Produced Films"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista SEARCH -->
+        <record model="ir.ui.view" id="partyv2.producers_search">
+            <field name="name">partyv2.producers search</field>
+            <field name="model">partyv2.producers</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Name"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista Form -->
+        <record model="ir.ui.view" id="partyv2.producers_form">
+            <field name="name">partyv2.producers form</field>
+            <field name="model">partyv2.producers</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <field name="photo" widget="image" class="oe_left oe_avatar"/>
+                        <group>
+                            <separator string="Producer Data"></separator>
+                            <field name="name" string="Producer" required="1"/>
+                            <!--<field name="total"  string=" Total Directed Films"/>-->
+                        </group>
+                        <separator string="Produced Films"></separator>
+                        <field name="films" readonly="1"/>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Scriptwriters -->
+        <!-- Vista Tree -->
+        <record model="ir.ui.view" id="partyv2.scriptwriters_list">
+            <field name="name">partyv2.scriptwriters list</field>
+            <field name="model">partyv2.scriptwriters</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="photo" widget="image" class="imagetree"/>
+                    <field name="name" string="Scriptwriter"/>
+                    <field name="films" sum="Written Films" string="Written Films"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista SEARCH -->
+        <record model="ir.ui.view" id="partyv2.scriptwriters_search">
+            <field name="name">partyv2.scriptwriters search</field>
+            <field name="model">partyv2.scriptwriters</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Name"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista Form -->
+        <record model="ir.ui.view" id="partyv2.scriptwriters_form">
+            <field name="name">partyv2.scriptwriters form</field>
+            <field name="model">partyv2.scriptwriters</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <field name="photo" widget="image" class="oe_left oe_avatar"/>
+                        <group>
+                            <separator string="Scriptwriter Data"></separator>
+                            <field name="name" string="Scriptwriter" required="1"/>
+                            <!--<field name="total"  string=" Total Directed Films"/>-->
+                        </group>
+                        <separator string="Written Films"></separator>
+                        <field name="films" readonly="1"/>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Musical Themes -->
+        <!-- Vista Tree -->
+        <record model="ir.ui.view" id="partyv2.musical_themes_list">
+            <field name="name">partyv2.musical_themes list</field>
+            <field name="model">partyv2.musical_themes</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="album"/>
+                    <field name="premiere_date"/>
+                    <field name="discography"/>
+                    <field name="duration" widget="float_time"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista SEARCH -->
+        <record model="ir.ui.view" id="partyv2.musical_themes_search">
+            <field name="name">partyv2.musical_themes search</field>
+            <field name="model">partyv2.musical_themes</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Title"/>
+                    <field name="album" string="Album"/>
+                    <field name="format" string="Format"/>
+                    <field name="discography" string="Discography"/>
+                    <field name="band" string="Band"/>
+                    <field name="duration" string="Min Duration" filter_domain="[('duration', '>=', self)]"/>
+                    <field name="duration" string="Max Duration" filter_domain="[('duration', '&lt;=', self)]"/>
+                    <filter name="this_year_release" string="Release This Year" domain="[('premiere_date', '=' , (time.strftime('%Y-%m-%d')))]"/>
+                    <filter name="filter_release_date" string="Release Date" date="premiere_date"/>
+                    <group expand="1" string="Group By">
+                        <filter string=" Group by Relase Date" name="premiere_date" context="{'group_by':'premiere_date'}"/>
+                        <filter string=" Group by Album" name="album" context="{'group_by':'album'}"/>
+                        <filter string=" Group by Band" name="band" context="{'group_by':'band'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista Form -->
+        <record model="ir.ui.view" id="partyv2.musical_themes_form">
+            <field name="name">partyv2.musical_themes form</field>
+            <field name="model">partyv2.musical_themes</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <h2><field name="name" placeholder="Musical Theme Title" required="1"/></h2>
+                        <group>
+                            <group>
+                                <separator string="Information Data"></separator>
+                                <field name="album"/>
+                                <field name="band"/>
+                                <field name="discography"/>
+                            </group>
+                            <group>
+                                <separator string="Release Data"></separator>
+                                <field name="format" required="1"/>
+                                <field name="duration" required="1" widget="float_time"/>
+                                <field name="premiere_date" string="Release Date"/>
+                            </group>
+                        </group>
+                        <separator string="Genres"></separator>
+                        <field name="genres" widget="many2many_tags"/>
+                        <group>
+                            <separator string="Creator Information"/>
+                        </group>
+                        <group>
+                            <notebook>
+                                <page string="Authors">
+                                    <field name="authors"/>
+                                </page>
+                                <page string="Producers">
+                                    <field name="producers"/>
+                                </page>
+                            </notebook>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Kanban -->
+        <record model="ir.ui.view" id="partyv2.musical_themes_kanban">
+            <field name="name">partyv2.musical_themes kanban</field>
+            <field name="model">partyv2.musical_themes</field>
+            <field name="arch" type="xml">
+                <kanban default_group_by="album" records_draggable="false">
+                    <field name="id"/>
+                    <field name="name"/>
+                    <field name="format"/>
+                    <field name="duration" widget="float_time"/>
+                    <field name="album"/>
+
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div t-attf-class="oe_kanban_global_click">
+                                <div class="o_kanban_image">
+                                    <img alt="Avatar" t-att-src="kanban_image('partyv2.musical_themes', 'image_medium',record.id.raw_value)"/>
+                                </div>
+                                <div class="oe_kanban_details">
+                                    <div t-attf-class="oe_kanban_content">
+                                        <h4>
+                                            <a type="edit">
+                                                <field name="name"></field>
+                                            </a>
+                                        </h4>
+                                    </div>
+                                    <div t-if="record.album.value">
+                                        <t t-esc="record.album.value"/>
+                                    </div>
+                                    <div t-if="record.format.value">
+                                        <t t-esc="record.format.value"/>
+                                    </div>
+                                    <div t-if="record.duration.value">
+                                        <t t-esc="record.duration.value"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <!-- Albums -->
+        <!-- Vista Tree -->
+        <record model="ir.ui.view" id="partyv2.albums_list">
+            <field name="name">partyv2.albums list</field>
+            <field name="model">partyv2.albums</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="photo" widget="image" class="imagetree"/>
+                    <field name="name"/>
+                    <field name="premiere_date"/>
+                    <field name="musical_themes" sum="Musical Themes"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista SEARCH -->
+        <record model="ir.ui.view" id="partyv2.albums_search">
+            <field name="name">partyv2.albums search</field>
+            <field name="model">partyv2.albums</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Title"/>
+                    <field name="discography" string="Discography"/>
+                    <field name="authors" string="Author"/>
+                    <filter name="this_year_release" string="Release This Year" domain="[('premiere_date', '=' , (time.strftime('%Y-%m-%d')))]"/>
+                    <filter name="filter_release_date" string="Release Date" date="premiere_date"/>
+                    <group expand="1" string="Group By">
+                        <filter string=" Group by Relase Date" name="premiere_date" context="{'group_by':'premiere_date'}"/>
+                        <filter string=" Group by Discography" name="discography" context="{'group_by':'discography'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista Form -->
+        <record model="ir.ui.view" id="partyv2.albums_form">
+            <field name="name">partyv2.albums form</field>
+            <field name="model">partyv2.albums</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <field name="photo" widget="image" style="width:100px"/>
+                        <group>
+                            <group>
+                                <separator string="Information Data"></separator>
+                                <field name="name" placeholder="Album Title" required="1"/>
+                                <field name="premiere_date" string="Release Date" required="1"/>
+                                <field name="discography" required="1"/>
+                            </group>
+                        </group>
+                        <group>
+                            <separator string="Authors"/>
+                            <field name="all_authors"/>
+                            <field name="musical_themes" readonly="1">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="duration" widget="float_time"/>
+                                </tree>
+                            </field>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Discographys -->
+        <!-- Vista Tree -->
+        <record model="ir.ui.view" id="partyv2.discographys_list">
+            <field name="name">partyv2.discographys list</field>
+            <field name="model">partyv2.discographys</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name" string="Discography"/>
+                    <field name="creation_year"/>
+                    <field name="album" sum="Albums" string="Albums"/>
+                    <field name="musical_themes" sum="Musical Themes"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista SEARCH -->
+        <record model="ir.ui.view" id="partyv2.discographys_search">
+            <field name="name">partyv2.discographys search</field>
+            <field name="model">partyv2.discographys</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Name"/>
+                    <field name="creation_year" string="Creation Year"/>
+                    <filter name="this_year_release" string="Creation this Year" domain="[('creation_date', '=' , (time.strftime('%Y-%m-%d')))]"/>
+                    <filter name="filter_release_date" string="Creation Date" date="creation_date"/>
+                    <group expand="1" string="Group By">
+                        <filter string=" Group by Creation Year" name="creation_year" context="{'group_by':'creation_year'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista Form -->
+        <record model="ir.ui.view" id="partyv2.discographys_form">
+            <field name="name">partyv2.discographys form</field>
+            <field name="model">partyv2.discographys</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <separator string="Discography Data"></separator>
+                            <field name="name" string="Discography Name" required="1"/>
+                            <field name="creation_date" required="1"/>
+                        </group>
+                        <notebook>
+                            <page string="Musical Themes">
+                                <field name="musical_themes" readonly="1"/>
+                            </page>
+                            <page string="Albums">
+                                <field name="album" readonly="1"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Authors -->
+        <!-- Vista Tree -->
+        <record model="ir.ui.view" id="partyv2.authors_list">
+            <field name="name">partyv2.authors list</field>
+            <field name="model">partyv2.authors</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="photo" widget="image" class="imagetree"/>
+                    <field name="name" required="1"/>
+                    <field name="birth_year" required="1"/>
+                    <field name="musical_themes" sum="Songs" string="Total Songs"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista SEARCH -->
+        <record model="ir.ui.view" id="partyv2.authors_search">
+            <field name="name">partyv2.authors search</field>
+            <field name="model">partyv2.authors</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Name"/>
+                    <field name="birth_year" string="Birth Year"/>
+                    <field name="albums" string="Album"/>
+                    <field name="bands" string="Band"/>
+                    <filter name="filter_author_belong_band" string="Belong Band" domain="[('belong_band', '=' , True)]"/>
+                    <group expand="1" string="Group By">
+                        <filter string=" Group by Belong Band" name="belong_band" context="{'group_by':'belong_band'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista Form -->
+        <record model="ir.ui.view" id="partyv2.authors_form">
+            <field name="name">partyv2.authors form</field>
+            <field name="model">partyv2.authors</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <field name="photo" widget="image" class="oe_left oe_avatar"/>
+                        <group>
+                            <separator string="Author Data"></separator>
+                            <field name="name" required="1"/>
+                            <field name="birth" required="1"/>
+                            <field name="belong_band"/>
+                            <field name="bands" widget="many2many_tags" attrs="{'invisible':[('belong_band', '=', False)]}"/>
+                        </group>
+                        <notebook>
+                            <page string="Musical Themes">
+                                <field name="musical_themes" readonly="1"/>
+                            </page>
+                            <page string="Albums">
+                                <field name="albums" readonly="1"/>
+                            </page>
+                            <page string="Bands" attrs="{'invisible':[('belong_band', '=', False)]}">
+                                <field name="bands" readonly="1"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Bands -->
+        <!-- Vista Tree -->
+        <record model="ir.ui.view" id="partyv2.bands_list">
+            <field name="name">partyv2.bands list</field>
+            <field name="model">partyv2.bands</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="creation_year"/>
+                    <field name="members" sum="Members" string="Members"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista SEARCH -->
+        <record model="ir.ui.view" id="partyv2.bands_search">
+            <field name="name">partyv2.bands search</field>
+            <field name="model">partyv2.bands</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Name"/>
+                    <field name="creation_year" string="Creation Year"/>
+                    <filter name="filter_author_belong_band" string="Min Creation Year" domain="[('creation_year', '>=' , self)]"/>
+                    <group expand="1" string="Group By">
+                        <filter string=" Group by Creation Year" name="creation_year" context="{'group_by':'creation_year'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista Form -->
+        <record model="ir.ui.view" id="partyv2.bands_form">
+            <field name="name">partyv2.bands form</field>
+            <field name="model">partyv2.bands</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <field name="photo" widget="image" style="width:200px"/>
+                        <group>
+                            <separator string="Band Data"></separator>
+                            <field name="name" required="1"/>
+                            <field name="creation_date" required="1"/>
+                        </group>
+                        <separator string="Members"></separator>
+                        <field name="members" readonly="1">
+                            <tree>
+                                <field name="photo" widget="image" class="imagetree"/>
+                                <field name="name"/>
+                            </tree>
+                        </field>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Party -->
+        <!-- Vista Tree -->
+        <record model="ir.ui.view" id="partyv2.party_list">
+            <field name="name">partyv2.party list</field>
+            <field name="model">partyv2.party</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="is_for_adults"/>
+                    <field name="name"/>
+                    <field name="place"/>
+                    <field name="date"/>
+                    <field name="finish_date"/>
+                    <field name="goers" sum="Goers" string="Total Goers"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista SEARCH -->
+        <record model="ir.ui.view" id="partyv2.party_search">
+            <field name="name">partyv2.party search</field>
+            <field name="model">partyv2.party</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Name"/>
+                    <field name="place" string="Place"/>
+                    <field name="organicer" string="Organicer"/>
+                    <filter name="filter_is_for_adults" string="For Adults" domain="[('is_for_adults', '=' , True)]"/>
+                    <filter name="filter_no_finished" string="No Finished" domain="[('finish_date', '>' , (time.strftime('%Y-%m-%d')))]"/>
+                    <filter name="filter_date" string="Date" date="date"/>
+                    <group expand="1" string="Group By">
+                        <filter string=" Group by For Adults" name="is_for_adults" context="{'group_by':'is_for_adults'}"/>
+                        <filter string=" Group by Place" name="place" context="{'group_by':'place'}"/>
+                        <filter string=" Group by Organicer" name="organicer" context="{'group_by':'organicer'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista Form -->
+        <record model="ir.ui.view" id="partyv2.party_form">
+            <field name="name">partyv2.party form</field>
+            <field name="model">partyv2.party</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <separator string="Party Data"></separator>
+                            <field name="name" required="1"/>
+                            <field name="place" required="1"/>
+                            <field name="date" required="1"/>
+                            <field name="finish_date" required="1"/>
+                            <field name="organicer"/>
+                            <field name="is_for_adults"/>
+                        </group>
+                        <group>
+                            <separator string="Music and Films"/>
+                            <field name="musical_themes" widget="many2many_tags"/>
+                            <field name="films" widget="many2many_tags"/>
+                        </group>
+                        <notebook>
+                            <page string="Goers">
+                                <field name="goers"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Vista Calendar -->
+        <record model="ir.ui.view" id="partyv2.party_calendar">
+            <field name="name">partyv2.party calendar</field>
+            <field name="model">partyv2.party</field>
+            <field name="arch" type="xml">
+                <calendar string="Party Calendar" date_start="date" date_stop="finish_date"
+                color="is_for_adults" mode="month">
+                    <field name="name"/>
+                    <field name="place"/>
+                    <field name="total" string="Total Goers"/>
+                </calendar>
+            </field>
+        </record>
+
+        <!-- Vista Kanban -->
+        <record model="ir.ui.view" id="partyv2.party_kanban">
+            <field name="name">partyv2.party kanban</field>
+            <field name="model">partyv2.party</field>
+            <field name="arch" type="xml">
+                <kanban default_group_by="date" on_create="quick_create"
+                        quick_create_view="partyv2.quick_create_party_form" records_draggable="false">
+                    <field name="id"/>
+                    <field name="name"/>
+                    <field name="place"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div>
+                                <a type="open">
+                                    <div t-attf-class="oe_kanban_content">
+                                        <h4>
+                                            <a type="edit">
+                                                <field name="name"></field>
+                                            </a>
+                                        </h4>
+                                        <ul>
+                                            <li><strong>Place:</strong>
+                                                <field name="place"></field>
+                                            </li>
+                                            <li>
+                                                <strong>Organicer: </strong><field name="organicer"/>
+                                            </li>
+                                            <li><strong>Total Goers:</strong>
+                                                <field name="total" ></field>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </a>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <!-- FOrmulario para crear dede kanban una fiesta -->
+        <record model="ir.ui.view" id="partyv2.quick_create_party_form">
+            <field name="name">partyv2.party form quickcreate</field>
+            <field name="model">partyv2.party</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group>
+                        <field name="name" required="1"/>
+                        <field name="place" required="1"/>
+                        <field name="date" required="1"/>
+                        <field name="finish_date" required="1"/>
+                        <field name="is_for_adults"/>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+
+        <!-- Goers -->
+        <!-- Vista Tree -->
+        <record model="ir.ui.view" id="partyv2.goers_list">
+            <field name="name">partyv2.goers list</field>
+            <field name="model">partyv2.goers</field>
+            <field name="arch" type="xml">
+                <tree decoration-warning="is_overdue == False">
+                    <field name="name"/>
+                    <field name="birth_year"/>
+                    <field name="is_overdue" invisible="1"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Vista SEARCH -->
+        <record model="ir.ui.view" id="partyv2.goers_search">
+            <field name="name">partyv2.goers search</field>
+            <field name="model">partyv2.goers</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Name"/>
+                    <filter name="filter_is_for_adults" string="Overdue" domain="[('is_overdue', '=' , True)]"/>
+                    <group expand="1" string="Group By">
+                        <filter string=" Group by Inscription Date" name="inscription_date" context="{'group_by':'inscription_date'}"/>
+                        <filter string=" Group by Birth Year" name="birth_year" context="{'group_by':'birth_year'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Vista Form -->
+        <record model="ir.ui.view" id="partyv2.goers_form">
+            <field name="name">partyv2.goers form</field>
+            <field name="model">partyv2.goers</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <field name="photo" widget="image" style="width:150"/>
+                        <group>
+                            <separator string="Goer Data"></separator>
+                            <field name="name" required="1"/>
+                            <field name="birth_year" required="1"/>
+                            <field name="inscription_date" readonly="1"/>
+                        </group>
+                        <notebook>
+                            <page string="Parties">
+                                <field name="party" readonly="1">
+                                    <tree>
+                                        <field name="name"/>
+                                        <field name="place"/>
+                                        <field name="date"/>
+                                        <field name="goers" sum="Goers" string="Total Goers"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- actions opening views on models -->
+
+        <record model="ir.actions.act_window" id="partyv2.action_films_window">
+            <field name="name">Films</field>
+            <field name="res_model">partyv2.films</field>
+            <field name="view_mode">tree,form,kanban</field>
+        </record>
+
+        <record model="ir.actions.act_window" id="partyv2.action_scriptwriters_window">
+            <field name="name">Scriptwriters</field>
+            <field name="res_model">partyv2.scriptwriters</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record model="ir.actions.act_window" id="partyv2.action_directors_window">
+            <field name="name">Directors</field>
+            <field name="res_model">partyv2.directors</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record model="ir.actions.act_window" id="partyv2.action_producers_window">
+            <field name="name">Producers</field>
+            <field name="res_model">partyv2.producers</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record model="ir.actions.act_window" id="partyv2.action_musicals_themes_window">
+            <field name="name">Musical Themes</field>
+            <field name="res_model">partyv2.musical_themes</field>
+            <field name="view_mode">tree,form,kanban</field>
+        </record>
+
+        <record model="ir.actions.act_window" id="partyv2.action_albums_window">
+            <field name="name">Albums</field>
+            <field name="res_model">partyv2.albums</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record model="ir.actions.act_window" id="partyv2.action_discographys_window">
+            <field name="name">Discographys</field>
+            <field name="res_model">partyv2.discographys</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record model="ir.actions.act_window" id="partyv2.action_authors_window">
+            <field name="name">Authors</field>
+            <field name="res_model">partyv2.authors</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record model="ir.actions.act_window" id="partyv2.action_bands_window">
+            <field name="name">Bands</field>
+            <field name="res_model">partyv2.bands</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record model="ir.actions.act_window" id="partyv2.action_parties_window">
+            <field name="name">Party</field>
+            <field name="res_model">partyv2.party</field>
+            <field name="view_mode">tree,form,kanban,calendar</field>
+        </record>
+
+        <record model="ir.actions.act_window" id="partyv2.action_goers_window">
+            <field name="name">Goers</field>
+            <field name="res_model">partyv2.goers</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record model="ir.actions.act_window" id="partyv2.action_genres_window">
+            <field name="name">Genres</field>
+            <field name="res_model">partyv2.genres</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record model="ir.actions.act_window" id="partyv2.action_languages_window">
+            <field name="name">Languages</field>
+            <field name="res_model">partyv2.languages</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- server action to the one above -->
+        <!--
+            <record model="ir.actions.server" id="party.action_server">
+              <field name="name">party server</field>
+              <field name="model_id" ref="model_party_party"/>
+              <field name="state">code</field>
+              <field name="code">
+                action = {
+                  "type": "ir.actions.act_window",
+                  "view_mode": "tree,form",
+                  "res_model": model._name,
+                }
+              </field>
+            </record>
+        -->
+
+        <!-- Top menu item -->
+
+        <menuitem name="Party" id="partyv2.menu_root"/>
+
+        <!-- menu categories -->
+
+        <menuitem name="Films" id="partyv2.menu_1" parent="partyv2.menu_root"/>
+        <menuitem name="Musical Themes" id="partyv2.menu_2" parent="partyv2.menu_root"/>
+        <menuitem name="Parties" id="partyv2.menu_3" parent="partyv2.menu_root"/>
+        <menuitem name="Others" id="partyv2.menu_4" parent="partyv2.menu_root"/>
+
+        <!-- actions -->
+        <menuitem name="Films" id="partyv2.menu_film_list" parent="partyv2.menu_1"
+                  action="partyv2.action_films_window"/>
+        <menuitem name="Directors" id="partyv2.menu_director_list" parent="partyv2.menu_1"
+                  action="partyv2.action_directors_window"/>
+        <menuitem name="Scriptwriters" id="partyv2.menu_scriptwriter_list" parent="partyv2.menu_1"
+                  action="partyv2.action_scriptwriters_window"/>
+        <menuitem name="Producers" id="partyv2.menu_producer_list" parent="partyv2.menu_1"
+                  action="partyv2.action_producers_window"/>
+
+        <!-- Menu 2 -->
+        <menuitem name="Musical Themes" id="partyv2.menu_musical_themes_list" parent="partyv2.menu_2"
+                  action="partyv2.action_musicals_themes_window"/>
+        <menuitem name="Albums" id="partyv2.menu_album_list" parent="partyv2.menu_2"
+                  action="partyv2.action_albums_window"/>
+        <menuitem name="Discographys" id="partyv2.menu_discography_list" parent="partyv2.menu_2"
+                  action="partyv2.action_discographys_window"/>
+        <menuitem name="Authors" id="partyv2.menu_author_list" parent="partyv2.menu_2"
+                  action="partyv2.action_authors_window"/>
+        <menuitem name="Bands" id="partyv2.menu_band_list" parent="partyv2.menu_2"
+                  action="partyv2.action_bands_window"/>
+
+        <!-- Menu 3 -->
+        <menuitem name="Parties" id="partyv2.menu_party_list" parent="partyv2.menu_3"
+                  action="partyv2.action_parties_window"/>
+        <menuitem name="Goers" id="partyv2.menu_goer_list" parent="partyv2.menu_3"
+                  action="partyv2.action_goers_window"/>
+
+        <!-- Menu 3 -->
+        <menuitem name="Genres" id="partyv2.menu_genres_list" parent="partyv2.menu_4"
+                  action="partyv2.action_genres_window"/>
+        <menuitem name="Languages" id="partyv2.menu_language_list" parent="partyv2.menu_4"
+                  action="partyv2.action_languages_window"/>
+
+    </data>
+</odoo>
